@@ -2,6 +2,6 @@ package exercises;
 
 public class Garage {
 
-    // TODO: implement this class (see assignments_2.txt)
+    // TODO: implement this class (see README.md)
     // so the tests in GarageTest pass.
 }
