@@ -13,6 +13,12 @@ Welcome! This topic has one or more small Java exercises to work through.
   class's objects.
 - Overriding `toString()` to produce a custom, human-readable
   representation of an object.
+- Inheritance: extending a class with `extends`, calling the parent's
+  constructor with `super(...)`, and overriding one of its methods to
+  change its behavior.
+- Polymorphism: storing and calling a subclass object through its parent
+  type, so code written against the parent class keeps working unchanged
+  no matter which subclass is actually there.
 
 ## The exercises
 
@@ -21,10 +27,11 @@ Welcome! This topic has one or more small Java exercises to work through.
 | 1 | Apartment | `src/main/java/exercises/Apartment.java` | 1 |
 | 2 | Vehicle | `src/main/java/exercises/Vehicle.java` | 1 |
 | 3 | Garage | `src/main/java/exercises/Garage.java` | 2 |
+| 4 | ElectricVehicle | `src/main/java/exercises/ElectricVehicle.java` | 3 |
 
 Each exercise has a `TODO` in its class to fill in, and a matching test file
 you can use to check your work as you go. You don't need to touch the test
-files — they're just there to help you see how you're doing. All three
+files — they're just there to help you see how you're doing. All four
 classes start out completely empty, so you'll need to design the fields,
 constructor(s), and methods yourself from the descriptions below — that's
 expected to show a compile error in the tests until you do.
@@ -75,6 +82,9 @@ Create Java class `Vehicle` that has
   parameter of type `Double`. The method calculates and removes the fuel
   the drive has taken and returns the remaining amount of fuel in the tank.
   Obviously, the tank can't have a negative amount of fuel.
+- Protected method `unitLabel` (no parameters) that returns the `String`
+  `"l gas left"`. `Garage` uses this (see below) to describe how much is
+  left in a vehicle, without needing to know what kind of vehicle it is.
 
 ### 3. Garage (2p)
 
@@ -96,8 +106,11 @@ Create class `Garage` that hosts four vehicles as an array. Reuse the class
   vehicles and returns the amount of fuel needed. Fuel is consumed in
   vehicles when the `drive` method of the `Vehicle` class is called.
 - Override the method `toString` (from the `Object` class), that returns
-  the garage information as one line per vehicle in the garage. If there
-  is no vehicle in a slot, report it as empty.
+  the garage information as one line per vehicle in the garage. Each line
+  reports the remaining amount from `getGas()` followed by that vehicle's
+  own `unitLabel()`, so the wording adapts to whatever kind of vehicle is
+  actually stored there. If there is no vehicle in a slot, report it as
+  empty.
 
   For example:
 
@@ -107,6 +120,56 @@ Create class `Garage` that hosts four vehicles as an array. Reuse the class
   Vehicle 3: 93.84l gas left
   Vehicle 4: empty
   ```
+
+- Method `addVehicle(Integer position, Vehicle vehicle)` — an overloaded
+  version that places an already-constructed `Vehicle` at the given
+  position, overwriting whatever was there before. Because it takes a
+  `Vehicle`, it also accepts any subclass of `Vehicle`, such as the
+  `ElectricVehicle` from the next exercise, without `Garage` needing any
+  further changes — `drive`, `refuel`, and `toString` keep working exactly
+  as before.
+
+### 4. ElectricVehicle (3p)
+
+Create class `ElectricVehicle` that `extends Vehicle`, reusing its
+`tankSize`/`gas` fields to represent battery capacity and remaining charge
+(both in kWh), and `fuelConsumption` to represent energy use per 100km
+(kWh/100km).
+
+Add a private member variable `regenRate` of type `Double`: the fraction of
+driving energy recovered through regenerative braking (e.g. `0.2` means 20%
+of it is recovered).
+
+- Constructor with three parameters — battery capacity, consumption rate,
+  and `regenRate`, in that order — that calls the `Vehicle` constructor via
+  `super(...)` to set up and fully charge the battery, then stores
+  `regenRate`.
+- Override the `drive` method: same signature and rules as `Vehicle.drive`
+  (returns the remaining charge, which can't go negative), but the energy
+  consumed is reduced by `regenRate`, i.e.
+  `distance / 100 * fuelConsumption * (1 - regenRate)`.
+- Override `unitLabel` to return `"kWh battery left"` instead of the
+  `Vehicle` default, so `Garage`'s `toString` describes an `ElectricVehicle`
+  correctly too.
+
+  For example, a `Garage` holding one plain `Vehicle` and one
+  `ElectricVehicle` (added via `addVehicle(Integer position, Vehicle vehicle)`)
+  reports:
+
+  ```
+  Vehicle 1: 60.00l gas left
+  Vehicle 2: 42.00kWh battery left
+  Vehicle 3: empty
+  Vehicle 4: empty
+  ```
+
+Since an `ElectricVehicle` **is a** `Vehicle`, an existing `Garage` can hold
+one via the `addVehicle(Integer position, Vehicle vehicle)` method above and
+call `drive` on it, or include it in `toString`, without any further changes
+to `Garage` — the overridden `drive` and `unitLabel` both run automatically.
+That's polymorphism: `Garage` only ever talks to the `Vehicle` type, and
+doesn't need to know (or care) which subclass is actually stored at each
+position.
 
 ## Step by step
 

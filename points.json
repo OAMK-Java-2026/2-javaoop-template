@@ -1,5 +1,6 @@
 {
   "exercises.ApartmentTest": 1,
   "exercises.VehicleTest": 1,
-  "exercises.GarageTest": 2
+  "exercises.GarageTest": 2,
+  "exercises.ElectricVehicleTest": 3
 }

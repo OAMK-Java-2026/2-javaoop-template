@@ -63,4 +63,10 @@ class VehicleTest {
         Vehicle vehicle = new Vehicle(50.0, 8.0);
         assertEquals(50.0, vehicle.drive(0.0), 0.001);
     }
+
+    @Test
+    void unitLabelDescribesRemainingFuel() {
+        Vehicle vehicle = new Vehicle(50.0, 8.0);
+        assertEquals("l gas left", vehicle.unitLabel());
+    }
 }
