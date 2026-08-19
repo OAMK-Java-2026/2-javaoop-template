@@ -1,0 +1,95 @@
+name: Autograde
+
+on:
+  push:
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout submission
+        uses: actions/checkout@v4
+
+      - name: Restore canonical test cases and points
+        run: |
+          git clone --depth 1 --quiet https://github.com/OAMK-Java-2026/2-javaoop-template.git __canonical
+          rm -rf src/test
+          cp -r __canonical/src/test src/test
+          cp __canonical/points.json points.json
+          rm -rf __canonical
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '22'
+          cache: maven
+
+      - name: Run tests
+        run: mvn -B test
+        continue-on-error: true
+
+      - name: Compute score
+        run: |
+          total=0
+          awarded=0
+          missing_reports=0
+          details=()
+
+          for class in $(jq -r 'keys[]' points.json); do
+            points=$(jq -r --arg c "$class" '.[$c]' points.json)
+            total=$((total + points))
+
+            report="target/surefire-reports/TEST-$class.xml"
+            class_awarded=0
+            if [ -f "$report" ]; then
+              tests=$(grep -oP 'tests="\K[0-9]+' "$report" | head -1)
+              fail=$(grep -oP 'failures="\K[0-9]+' "$report" | head -1)
+              err=$(grep -oP 'errors="\K[0-9]+' "$report" | head -1)
+              if [ "$tests" -gt 0 ]; then
+                passed=$((tests - fail - err))
+                # points * (passed / tests), rounded to the nearest whole point
+                class_awarded=$(( (points * passed * 2 + tests) / (tests * 2) ))
+              fi
+            else
+              missing_reports=$((missing_reports + 1))
+            fi
+
+            awarded=$((awarded + class_awarded))
+            details+=("| $class | $class_awarded / $points |")
+          done
+
+          {
+            echo "## Score: $awarded / $total points"
+            echo ""
+            echo "| Exercise | Points |"
+            echo "|---|---|"
+            printf '%s\n' "${details[@]}"
+            if [ "$missing_reports" -gt 0 ]; then
+              echo ""
+              echo "_(no test report for $missing_reports exercise(s) — check the 'Run tests' step above for a compile error)_"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          state="success"
+          if [ "$awarded" -lt "$total" ]; then
+            state="failure"
+          fi
+
+          # Publish the score as a commit status, so it shows up right on
+          # the commit / PR page (hover or one click) without opening the
+          # Actions tab.
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -d "{\"state\":\"$state\",\"description\":\"$awarded / $total points\",\"context\":\"autograde/points\",\"target_url\":\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            > /dev/null
+
+          if [ "$state" = "failure" ]; then
+            exit 1
+          fi
