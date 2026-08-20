@@ -40,11 +40,6 @@ There's also a `Main.java` with a `main` method, so you have something
 runnable from the start — it doesn't do anything yet, it's just there so
 your "Run" button works right away.
 
-Until you implement a class, its test file will show as broken in your
-editor — that's normal. `Main` still builds and runs from the start
-regardless, and a given exercise's tests only start running once you've
-implemented that exercise's class.
-
 ## Exercise descriptions
 
 ### 1. Apartment (1p)
