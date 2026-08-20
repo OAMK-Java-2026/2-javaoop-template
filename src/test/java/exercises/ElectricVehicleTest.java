@@ -1,10 +1,31 @@
 package exercises;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ElectricVehicleTest {
+
+    private static Locale originalLocale;
+
+    @BeforeAll
+    static void forceUsLocale() {
+        // toString() formats decimals via the platform default locale, which
+        // uses a comma on e.g. Finnish machines instead of the period these
+        // assertions expect — pin it so the test behaves the same on every
+        // student's computer and in CI regardless of the OS locale.
+        originalLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @AfterAll
+    static void restoreLocale() {
+        Locale.setDefault(originalLocale);
+    }
 
     @Test
     void constructorFullyChargesTheBattery() {
