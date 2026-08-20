@@ -34,7 +34,7 @@ you can use to check your work as you go. You don't need to touch the test
 files — they're just there to help you see how you're doing. All four
 classes start out completely empty, so you'll need to design the fields,
 constructor(s), and methods yourself from the descriptions below — that's
-expected to show a compile error in the tests until you do.
+expected to show as failing tests until you do.
 
 There's also a `Main.java` with a `main` method, so you have something
 runnable from the start — it doesn't do anything yet, it's just there so
